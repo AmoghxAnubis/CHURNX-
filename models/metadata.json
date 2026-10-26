@@ -2,7 +2,7 @@
   "model_name": "GradientBoostingClassifier",
   "version": "churnx-v1.0.0",
   "task": "binary_classification",
-  "training_date": "2026-10-26T17:50:27.550302+00:00",
+  "training_date": "2026-10-26T17:58:40.009184+00:00",
   "dataset": "IBM Telco Customer Churn",
   "dataset_url": "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv",
   "dataset_sha256": "16320c9c1ec72448db59aa0a26a0b95401046bef5d02fd3aeb906448e3055e91",
@@ -300,6 +300,14 @@
     }
   },
   "sklearn_version": "1.8.0",
+  "tuning": {
+    "best_params": {
+      "classifier__learning_rate": 0.07,
+      "classifier__n_estimators": 120
+    },
+    "cv_roc_auc": 0.847500197798284,
+    "candidates": 4
+  },
   "reference_profile": {
     "gender": "Male",
     "SeniorCitizen": 0,

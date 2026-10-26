@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.base import clone
+from sklearn.calibration import calibration_curve
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
@@ -22,7 +23,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (accuracy_score, average_precision_score, brier_score_loss,
                             confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score)
-from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
@@ -136,6 +137,15 @@ def main():
     ranked = sorted([row for row in comparison if row["model"] != "DummyClassifier"], key=lambda row: (row["roc_auc"], row["pr_auc"], row["recall"]), reverse=True)
     winner = ranked[0]["model"]
     pipeline = fitted[winner]
+    grids = {
+        "LogisticRegression": {"classifier__C": [.3, 1, 3]},
+        "DecisionTreeClassifier": {"classifier__max_depth": [4, 5, 7]},
+        "RandomForestClassifier": {"classifier__max_depth": [7, 9, 12]},
+        "GradientBoostingClassifier": {"classifier__n_estimators": [80, 120], "classifier__learning_rate": [.05, .07]},
+    }
+    tuning = GridSearchCV(pipeline, grids[winner], scoring="roc_auc", cv=folds, n_jobs=1)
+    tuning.fit(x.loc[train], y.loc[train])
+    pipeline = tuning.best_estimator_
     validation_prob = pipeline.predict_proba(x.loc[validation])[:, 1]
     thresholds = [{"threshold": round(float(t), 2), **metrics(y.loc[validation], validation_prob, t)} for t in np.arange(.15, .76, .01)]
     acceptable = [row for row in thresholds if row["recall"] >= .70]
@@ -158,6 +168,7 @@ def main():
         "baseline_metrics": baseline, "validation_metrics": choice, "comparison": comparison, "feature_importance": features,
         "split": {"train": len(train), "validation": len(validation), "test": len(test), "seed": SEED, "cv_folds": 5},
         "fairness": fairness, "sklearn_version": sklearn.__version__,
+        "tuning": {"best_params": tuning.best_params_, "cv_roc_auc": float(tuning.best_score_), "candidates": len(tuning.cv_results_["params"])},
         "reference_profile": {column: float(x.loc[train, column].median()) if column in NUMERIC else x.loc[train, column].mode().iloc[0].item() if isinstance(x.loc[train, column].mode().iloc[0], np.generic) else x.loc[train, column].mode().iloc[0] for column in x},
         "performance_gates": {"roc_auc": test_metrics["roc_auc"] >= .8, "recall": test_metrics["recall"] >= .7, "f1": test_metrics["f1"] >= .55},
     }
@@ -172,6 +183,17 @@ def main():
                                                "scoring_context": "All dataset rows scored, including training rows; model quality is measured only on the held-out test set."})
     write_json(reports / "splits.json", {"train": data.loc[train, "customerID"].tolist(), "validation": data.loc[validation, "customerID"].tolist(), "test": data.loc[test, "customerID"].tolist()})
     write_json(reports / "thresholds.json", thresholds)
+    observed, predicted = calibration_curve(y.loc[test], test_prob, n_bins=10, strategy="quantile")
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    axes[0].plot(predicted, observed, marker="o", label=winner)
+    axes[0].plot([0, 1], [0, 1], linestyle="--", color="grey")
+    axes[0].set(xlabel="Mean predicted probability", ylabel="Observed churn fraction", title="Held-out calibration")
+    axes[1].imshow(test_metrics["confusion_matrix"], cmap="Greens")
+    axes[1].set(xticks=[0, 1], yticks=[0, 1], xticklabels=["Stay", "Churn"], yticklabels=["Stay", "Churn"], xlabel="Predicted", ylabel="Actual", title="Test confusion matrix")
+    for i in range(2):
+        for j in range(2):
+            axes[1].text(j, i, str(test_metrics["confusion_matrix"][i][j]), ha="center", va="center")
+    fig.tight_layout(); fig.savefig(reports / "evaluation.png", dpi=140); plt.close(fig)
     print(json.dumps({"selected": winner, "threshold": threshold, "test": test_metrics, "gates": metadata["performance_gates"]}, indent=2), flush=True)
 
 
