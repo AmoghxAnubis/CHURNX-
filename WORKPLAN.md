@@ -47,8 +47,9 @@ For each slice: inspect the PRD contract, implement, verify, review the evidence
 - [x] Add CI for lint/build, contract tests, API tests and browser tests.
 - [x] Add README, model card, dictionary, API documentation and dataset provenance.
 - [x] Frontend lint, contract tests and production build pass.
-- [x] Backend integration/data tests pass (22 tests).
-- [ ] Finish browser regression verification after fixing an overly strict select locator.
+- [x] Backend integration/data tests pass (23 tests, including explicit database connection closure).
+- [x] All three browser regression tests pass; desktop/mobile screenshots visually reviewed.
+- [x] Controlled 100-request API benchmark passes: 100% success, 18.83 ms p95 (excluding network transit and startup).
 - [ ] Verify a Docker build/run (daemon unavailable in this workspace).
 - [ ] Provision public frontend/backend hosting and verify deployed CORS/prediction (hosting destination required).
 
@@ -58,4 +59,4 @@ Gradient Boosting, classification threshold 0.35. Held-out ROC-AUC 0.84398, reca
 
 ## Browser review
 
-Desktop and 390-pixel mobile Overview screenshots were captured and visually reviewed. Offline/retry behavior and mobile viewport checks pass. The initial full-flow test reached a successful prediction and reload-persisted history, then exposed a test locator issue for a select inside a wrapping label; the locator now uses the observed combobox accessible name. A rerun is pending.
+Desktop and 390-pixel mobile Overview screenshots were captured and visually reviewed, along with the completed prediction view. All browser tests pass: live scores, filtering/search, model and insight pages, real prediction parity, reload-persisted history, dependent service fields, offline/retry/error handling, and mobile viewport fit. A Windows benchmark exposed lingering SQLite handles; explicit connection closure was added and verified by a database-rename regression test.

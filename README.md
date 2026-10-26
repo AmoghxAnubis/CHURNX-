@@ -51,6 +51,8 @@ npm.cmd run test:e2e
 
 The browser suite starts its own servers on ports 18080/15173, exercises live inference, search/filtering, persisted history, errors and mobile layout, and writes screenshots into `reports/`. CI runs the same checks. Docker build/run requires a running daemon; see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
+The controlled `python -m scripts.benchmark` run completed 100 sequential prediction requests with 100% success and 18.83 ms p95 latency. This uses FastAPI TestClient, excluding network transit and model startup; the complete result is in `reports/benchmark.json`.
+
 ## Repository
 
 - `ml/train.py`: source validation, EDA, train/validation/test splits, model comparison, tuning and serialization
