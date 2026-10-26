@@ -3,7 +3,7 @@ import logging
 import os
 import sqlite3
 import time
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, closing
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
@@ -28,7 +28,7 @@ class ModelService:
         self.dashboard = json.loads(model_path.with_name("dashboard.json").read_text(encoding="utf-8"))
         self.database = database
         database.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection, connection:
             connection.execute("CREATE TABLE IF NOT EXISTS predictions (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, probability REAL NOT NULL, risk TEXT NOT NULL, prediction INTEGER NOT NULL, model_version TEXT NOT NULL)")
         self.monitor = {"requests": 0, "errors": 0, "total_latency_ms": 0.0, "predictions": 0, "probability_sum": 0.0, "risk_distribution": {"LOW": 0, "MEDIUM": 0, "HIGH": 0}}
         self.lock = Lock()
@@ -47,7 +47,7 @@ class ModelService:
         risk = risk_level(probability, bands["low"], bands["high"])
         prediction = int(probability >= self.metadata["threshold"])
         prediction_id = str(uuid4())
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute("INSERT INTO predictions VALUES (?, ?, ?, ?, ?, ?)", (prediction_id, datetime.now(timezone.utc).isoformat(), probability, risk, prediction, self.metadata["version"]))
         with self.lock:
             self.monitor["predictions"] += 1
@@ -118,7 +118,7 @@ def create_app(model_path=None, database=None):
 
     @app.get("/predictions")
     def history(limit: int = Query(default=50, ge=1, le=200)):
-        with sqlite3.connect(service().database) as connection:
+        with closing(sqlite3.connect(service().database)) as connection, connection:
             connection.row_factory = sqlite3.Row
             rows = connection.execute("SELECT * FROM predictions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
         return {"predictions": [dict(row) for row in rows]}

@@ -81,6 +81,16 @@ def test_cors(client):
     assert "access-control-allow-origin" not in client.options("/predict", headers=headers).headers
 
 
+def test_database_connections_close_after_requests(tmp_path, payload):
+    database = tmp_path / "history.db"
+    with TestClient(create_app(database=database)) as current:
+        assert current.post("/predict", json=payload).status_code == 200
+        assert len(current.get("/predictions").json()["predictions"]) == 1
+    # Windows cannot rename a SQLite file that is still held open by our connections.
+    renamed = database.rename(tmp_path / "closed-history.db")
+    assert renamed.exists()
+
+
 def test_dataset_schema_and_split_integrity():
     data = load_data(ROOT / "data/raw/Telco-Customer-Churn.csv")
     assert len(data) == 7043
