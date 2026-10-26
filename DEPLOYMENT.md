@@ -1,5 +1,19 @@
 # Deployment
 
+## Selected setup: Vercel frontend + Render Free API
+
+The root `vercel.json` fixes the Vite framework, dev-dependency installation, build command and `dist` output. `.vercelignore` excludes the Python backend, model artifacts, datasets, local environments and generated reports from CLI frontend uploads. No Python API is deployed to Vercel in this setup.
+
+1. Import `AmoghxAnubis/CHURNX-` into Vercel, using the repository root and the settings in `vercel.json`. This supplies the real frontend origin. Its interface can be deployed first, but will show the service as unavailable until the next steps are finished.
+2. Connect the same GitHub repository to a Render Blueprint using `render.yaml`. Select the free service and supply `ALLOWED_ORIGINS` with the exact Vercel frontend HTTPS origin, without a trailing slash. The Blueprint uses Python 3.12.13, the pinned requirements lock, and the existing trained artifacts; it does not retrain during deployment.
+3. Wait for Render's `/health` to return 200 with `model_loaded: true`. Copy the actual assigned Render API origin; the service name does not guarantee that a particular `onrender.com` hostname is available.
+4. In the Vercel project, set `VITE_API_URL` to that Render origin for Production (and Preview if desired), then redeploy. This URL is public configuration, not a secret. Never set it to localhost in a cloud deployment.
+5. Verify the Overview, customer search, individual prediction, history, insights and model metadata through the production frontend. If using Vercel preview domains, add those exact origins to Render's comma-separated `ALLOWED_ORIGINS`; an allowed production domain does not automatically permit every preview hostname.
+
+Render Free sleeps after 15 minutes without inbound traffic and may take about a minute to wake. Initial dashboard loading therefore waits up to 90 seconds before offering retry. The SQLite database is deliberately placed at `/tmp/churnx/predictions.db`: history survives normal requests while the instance runs, but resets on sleep, restart or redeployment. Model files shipped in the repository remain available. Persistent history requires upgrading the backend storage or adding an external database later.
+
+Official references: [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite), [FastAPI on Render](https://render.com/docs/deploy-fastapi), [Render free limits](https://render.com/docs/free).
+
 ## Backend container
 
 From the repository root:

@@ -53,6 +53,14 @@ For each slice: inspect the PRD contract, implement, verify, review the evidence
 - [ ] Verify a Docker build/run (daemon unavailable in this workspace).
 - [ ] Provision public frontend/backend hosting and verify deployed CORS/prediction (hosting destination required).
 
+## Selected deployment configuration
+
+- [x] User selected Vercel for the frontend and Render Free for the API.
+- [x] Add explicit Vercel build settings and exclude Python/local artifacts from frontend CLI uploads.
+- [x] Add a free Render Blueprint with health checks, locked dependencies, Python 3.12 and temporary SQLite history.
+- [x] Allow 90 seconds for initial API cold-start connection and explain the waiting state in the dashboard.
+- [ ] Connect Vercel/Render accounts, obtain real deployment domains, set API URL/CORS, and verify production.
+
 ## Measured model outcome
 
 Gradient Boosting, classification threshold 0.35. Held-out ROC-AUC 0.84398, recall 0.72193 and F1 0.63380. All three PRD gates pass. The source has 7,043 customers; the trained model scores 964 at high risk and estimates average dataset risk of approximately 26.4%.
