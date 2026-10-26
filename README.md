@@ -67,7 +67,7 @@ The controlled `python -m scripts.benchmark` run completed 100 sequential predic
 
 The data is a fictional customer snapshot, not a monthly event history. All-dataset scoring includes training rows; only held-out metrics estimate generalization. Local explanations measure sensitivity against the training reference rather than causal effects. Demographic subgroup metrics are recorded for review. Drift monitoring is manual; automatic retraining is outside V1. The sample API has no user accounts, so an access layer is needed before handling private customer profiles. Public deployment has not been provisioned.
 
-Read [MODEL_CARD.md](./MODEL_CARD.md), [DATA_DICTIONARY.md](./DATA_DICTIONARY.md), [API.md](./API.md), [WORKPLAN.md](./WORKPLAN.md), and [PRD.md](./PRD.md) for details.
+Read [DATASET.md](./DATASET.md), [MODEL_CARD.md](./MODEL_CARD.md), [DATA_DICTIONARY.md](./DATA_DICTIONARY.md), [API.md](./API.md), [WORKPLAN.md](./WORKPLAN.md), and [PRD.md](./PRD.md) for details.
 
 ## Team
 
