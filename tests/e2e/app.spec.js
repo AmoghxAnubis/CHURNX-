@@ -34,11 +34,11 @@ test('live dashboard, customer filters, predictions, history and model metadata'
   await expect(page.getByText('Live inference', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Predictions', exact: true }).click();
   await expect(page.locator('.history-card tbody tr').first()).toContainText(prediction.model_version);
-  await page.getByLabel('Internet service', { exact: true }).selectOption('No');
-  await expect(page.getByLabel('Tech support', { exact: true })).toHaveValue('No internet service');
-  await expect(page.getByLabel('Tech support', { exact: true })).toBeDisabled();
-  await page.getByLabel('Phone service', { exact: true }).selectOption('No');
-  await expect(page.getByLabel('Multiple lines')).toHaveValue('No phone service');
+  await page.getByRole('combobox', { name: 'Internet service', exact: true }).selectOption('No');
+  await expect(page.getByRole('combobox', { name: 'Tech support', exact: true })).toHaveValue('No internet service');
+  await expect(page.getByRole('combobox', { name: 'Tech support', exact: true })).toBeDisabled();
+  await page.getByRole('combobox', { name: 'Phone service', exact: true }).selectOption('No');
+  await expect(page.getByRole('combobox', { name: 'Multiple lines' })).toHaveValue('No phone service');
   await page.getByRole('button', { name: 'Insights', exact: true }).click();
   await expect(page.locator('.chart-card')).toHaveCount(6);
   await page.getByRole('button', { name: 'Model', exact: true }).click();
