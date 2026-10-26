@@ -25,7 +25,7 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]);
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(90000)]);
     Promise.all([apiRequest('/health', { signal }), apiRequest('/dashboard', { signal }), apiRequest('/model-info', { signal }), apiRequest('/predictions', { signal })])
       .then(([health, dashboard, model, history]) => {
         if (active && health.model_loaded) setWorkspace({ status: 'ready', dashboard, model, history: history.predictions, error: '' });
@@ -67,7 +67,7 @@ export default function App() {
     </aside>
     <main className="main-content">
       <header className="topbar"><div><span className="breadcrumb">Workspace / {activeLabel}</span><h1>{activeLabel}</h1></div><div className="topbar-actions"><span className={`mode-pill ${ready ? 'connected' : ''}`}><span />{ready ? 'Live inference' : workspace.status === 'loading' ? 'Connecting' : 'Offline'}</span><span className="date-label">{new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(new Date())}</span><div className="avatar">CX</div></div></header>
-      {workspace.status === 'loading' && <div className="service-notice" role="status">Loading customer scores and model results…</div>}
+      {workspace.status === 'loading' && <div className="service-notice" role="status">Connecting to the prediction service… After inactivity, this can take about a minute.</div>}
       {workspace.status === 'error' && <div className="error-message service-notice" role="alert"><span>{workspace.error || 'The service is unavailable.'}</span><button className="secondary-button" onClick={() => { setWorkspace((current) => ({ ...current, status: 'loading' })); setReload((current) => current + 1); }}>Retry connection</button></div>}
       {activePage === 'overview' && <Overview dashboard={workspace.dashboard} model={workspace.model} averageRisk={averageRisk} highRiskCount={highRiskCount} navigate={setActivePage} />}
       {activePage === 'customers' && <CustomersPage customers={customers} ready={ready} />}

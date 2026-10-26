@@ -35,3 +35,4 @@ runtime/
 .uv-cache/
 test-results/
 playwright-report/
+.vercel/
